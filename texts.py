@@ -36,3 +36,15 @@ RULES = f"""
     - Block your opponent’s moves while setting up your own alignment!
     - Plan your moves strategically to maximize mobility.
 """
+
+GAME_MODE = """
+Game Mode:
+1. Player vs Player
+2. Player vs CPU
+Choose an option: """
+
+DIFFICULT = f"""
+Difficult:
+1. Normal
+2. Hard
+Choose an option: """

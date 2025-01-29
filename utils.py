@@ -1,5 +1,6 @@
 import os
 import random
+import time
 from typing import List, Dict
 from texts import LOGO, RULES
 
@@ -62,7 +63,6 @@ def create_initial_table() -> List[List[int]]:
         table[row][col] = player
     return table
 
-
 def draw_table(table: List[List[int]]) -> None:
     """Displays the current state of the game table."""
     print("   A B C D E F")
@@ -73,6 +73,99 @@ def draw_table(table: List[List[int]]) -> None:
         print("")
     separator()
 
+def draw_table_with_highlight(table: List[List[int]], highlight_pos: tuple[int, int] = None) -> None:
+    """Displays the current state of the game table with optional highlight."""
+    print("   A B C D E F")
+    for row in range(TABLE_SIZE):
+        print(row + 1, end=" ")
+        for col in range(TABLE_SIZE):
+            if highlight_pos and (row, col) == highlight_pos:
+                # Highlight the current piece with a different color
+                print(f"\033[1m{draw_square(table[row][col])}\033[0m", end="")
+            else:
+                print(draw_square(table[row][col]), end="")
+        print("")
+    separator()
+
+def get_available_moves(table: list[list[int]], row: int, col: int) -> list[dict[str, int]]:
+    """Calculates all available moves for a piece at the given position."""
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    
+    return [
+        {'vertical': dr, 'horizontal': dc}
+        for dr, dc in directions
+        if 0 <= (new_row := row + dr) < TABLE_SIZE
+        and 0 <= (new_col := col + dc) < TABLE_SIZE
+        and table[new_row][new_col] == 0
+    ]
+
+def get_available_squares(table: list[list[int]], player: int) -> list[dict]:
+    """Finds all squares with pieces belonging to the given player and their possible moves."""
+    if player not in [1, 2]:
+        raise ValueError("Player must be 1 or 2")
+    
+    return [
+        {
+            "square_position": {"row": row, "col": col},
+            "available_moves": available_moves
+        }
+        for row in range(TABLE_SIZE)
+        for col in range(TABLE_SIZE)
+        if table[row][col] == player and (available_moves := get_available_moves(table, row, col))
+    ]
+
+def move_piece(table: list[list[int]], piece_position: dict[str, int], move_direction: dict[str, int], player: int) -> list[list[int]]:
+    """Moves a piece in the specified direction until it hits an obstacle or the board limit."""
+    row, col = piece_position['row'], piece_position['col']
+    
+    while True:
+        new_row, new_col = row + move_direction['vertical'], col + move_direction['horizontal']
+        if 0 <= new_row < TABLE_SIZE and 0 <= new_col < TABLE_SIZE and table[new_row][new_col] == 0:
+            table[row][col], table[new_row][new_col] = 0, player
+            row, col = new_row, new_col
+        else:
+            break
+    
+    return table
+
+def animate_move_piece(table: list[list[int]], piece_position: dict[str, int], 
+                      move_direction: dict[str, int], player: int) -> list[list[int]]:
+    """Moves a piece with animation, showing each step of movement."""
+    row, col = piece_position['row'], piece_position['col']
+    original_table = [row[:] for row in table]  # Create a copy of the original table
+    
+    # Calculate the path before animation
+    path = []
+    current_row, current_col = row, col
+    while True:
+        new_row = current_row + move_direction['vertical']
+        new_col = current_col + move_direction['horizontal']
+        if (0 <= new_row < TABLE_SIZE and 
+            0 <= new_col < TABLE_SIZE and 
+            original_table[new_row][new_col] == 0):
+            path.append((new_row, new_col))
+            current_row, current_col = new_row, new_col
+        else:
+            break
+
+    # Animate the movement
+    for step_row, step_col in path:
+        # Clear the previous position
+        table[row][col] = 0
+        # Set the new position
+        table[step_row][step_col] = player
+        
+        # Clear screen and redraw
+        clear_screen()
+        draw_table(table)
+        
+        # Add a small delay for smooth animation
+        time.sleep(0.15)
+        
+        # Update current position
+        row, col = step_row, step_col
+    
+    return table
 
 def check_winner(table: List[List[int]]) -> int:
     """Checks the game table for a winner."""
