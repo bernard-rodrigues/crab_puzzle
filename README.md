@@ -4,19 +4,7 @@
 
 This is a python implementation of [Lost in Play](https://www.happyjuice.games/)'s Crab Puzzle Challenge
 
-Prepare your virtual environment by running:
-
-```bash
-python -m venv env
-```
-
-Install the requirements:
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-Finally, run:
+Just run:
 
 ```bash
 python main.py
