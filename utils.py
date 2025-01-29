@@ -1,7 +1,6 @@
 import os
 import random
-import numpy as np
-
+from typing import List, Dict
 from texts import LOGO, RULES
 
 # Constants
@@ -43,124 +42,45 @@ def show_rules() -> None:
 
 
 def draw_square(square_number: int) -> str:
-    """Converts a square's numeric value to its visual representation.
-
-    Args:
-        square_number (int): The value of the square (0, 1, or 2).
-
-    Returns:
-        str: The square's visual representation (🟨, 🟩, 🟥).
-    """
-    match square_number:
-        case 0:
-            return WHITE_SQUARE
-        case 1:
-            return GREEN_SQUARE
-        case 2:
-            return RED_SQUARE
+    """Converts a square's numeric value to its visual representation."""
+    return {0: WHITE_SQUARE, 1: GREEN_SQUARE, 2: RED_SQUARE}.get(square_number, WHITE_SQUARE)
 
 
-def translate_direction(direction: dict) -> str:
-    """Translates a direction dictionary into a human-readable string.
-
-    Args:
-        direction (dict): A dictionary containing movement direction, 
-                          with keys 'vertical' and 'horizontal'.
-
-    Returns:
-        str: A string describing the direction (up, down, left, right).
-
-    Raises:
-        ValueError: If the direction is invalid.
-    """
-    if direction['vertical'] == -1:
-        return "up"
-    if direction['vertical'] == 1:
-        return "down"
-    if direction['horizontal'] == -1:
-        return "left"
-    if direction['horizontal'] == 1:
-        return "right"
-    raise ValueError("Not a valid direction")
+def translate_direction(direction: Dict[str, int]) -> str:
+    """Translates a direction dictionary into a human-readable string."""
+    directions = {(-1, 0): "up", (1, 0): "down", (0, -1): "left", (0, 1): "right"}
+    return directions.get((direction.get('vertical', 0), direction.get('horizontal', 0)), "Invalid direction")
 
 
-def create_initial_table() -> np.ndarray:
-    """Creates the initial game table with predefined positions for players.
-
-    Returns:
-        np.ndarray: A 6x6 numpy array representing the game table.
-    """
-    table = np.zeros((TABLE_SIZE, TABLE_SIZE), dtype=int)
-
-    # Initial positions for Player 1 (1) and Player 2 (2)
-    table[0][0] = 1
-    table[0][2] = 2
-    table[0][3] = 1
-    table[0][5] = 2
-    table[2][0] = 2
-    table[2][5] = 1
-    table[3][0] = 1
-    table[3][5] = 2
-    table[5][0] = 2
-    table[5][2] = 1
-    table[5][3] = 2
-    table[5][5] = 1
-
+def create_initial_table() -> List[List[int]]:
+    """Creates the initial game table with predefined positions for players."""
+    table = [[0 for _ in range(TABLE_SIZE)] for _ in range(TABLE_SIZE)]
+    positions = [(0, 0, 1), (0, 2, 2), (0, 3, 1), (0, 5, 2),
+                 (2, 0, 2), (2, 5, 1), (3, 0, 1), (3, 5, 2),
+                 (5, 0, 2), (5, 2, 1), (5, 3, 2), (5, 5, 1)]
+    for row, col, player in positions:
+        table[row][col] = player
     return table
 
 
-def draw_table(table: np.ndarray) -> None:
-    """Displays the current state of the game table.
-
-    Args:
-        table (np.ndarray): A 6x6 numpy array representing the game table.
-    """
-    col_headers = (" ", " A", " B", " C", " D", " E", " F\n")
-    for label in col_headers:
-        print(label, end="")
-
+def draw_table(table: List[List[int]]) -> None:
+    """Displays the current state of the game table."""
+    print("   A B C D E F")
     for row in range(TABLE_SIZE):
-        print(row + 1, end="")
+        print(row + 1, end=" ")
         for col in range(TABLE_SIZE):
             print(draw_square(table[row][col]), end="")
         print("")
     separator()
 
 
-def check_winner(table: np.ndarray) -> int:
-    """Checks the game table for a winner.
-
-    Args:
-        table (np.ndarray): A 6x6 numpy array representing the game table.
-
-    Returns:
-        int: The winning player number (1 or 2), or 0 if no winner is found.
-    """
-    # Check rows for a winner
-    for row in range(TABLE_SIZE):
-        counter = 0
-        last_dot = 0
-        for col in range(TABLE_SIZE):
-            if table[row][col] == last_dot and table[row][col] != 0:
-                counter += 1
-            else:
-                counter = 1
-            last_dot = table[row][col]
-            if counter == 4:  # Four consecutive pieces in a row
-                return last_dot
-
-    # Check columns for a winner
-    for col in range(TABLE_SIZE):
-        counter = 0
-        last_dot = 0
-        for row in range(TABLE_SIZE):
-            if table[row][col] == last_dot and table[row][col] != 0:
-                counter += 1
-            else:
-                counter = 1
-            last_dot = table[row][col]
-            if counter == 4:  # Four consecutive pieces in a column
-                return last_dot
-
-    # If no winner is found, return 0
+def check_winner(table: List[List[int]]) -> int:
+    """Checks the game table for a winner."""
+    # Check rows and columns
+    for i in range(TABLE_SIZE):
+        for j in range(TABLE_SIZE - 3):
+            if table[i][j] != 0 and all(table[i][j] == table[i][j + k] for k in range(4)):
+                return table[i][j]
+            if table[j][i] != 0 and all(table[j][i] == table[j + k][i] for k in range(4)):
+                return table[j][i]
     return 0
