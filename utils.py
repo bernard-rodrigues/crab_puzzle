@@ -10,6 +10,10 @@ GREEN_SQUARE: str = "🟩"  # Represents Player 1
 RED_SQUARE: str = "🟥"    # Represents Player 2
 WHITE_SQUARE: str = "🟨"  # Represents an empty square
 
+GREEN_CIRCLE: str = "🟢"
+RED_CIRCLE: str = "🔴"
+WHITE_CIRCLE: str = "🟡"
+
 
 def show_logo() -> None:
     """Displays the game logo."""
@@ -42,9 +46,12 @@ def show_rules() -> None:
     input("Press Enter to continue...")
 
 
-def draw_square(square_number: int) -> str:
+def draw_square(square_number: int, highlight: bool = False) -> str:
     """Converts a square's numeric value to its visual representation."""
-    return {0: WHITE_SQUARE, 1: GREEN_SQUARE, 2: RED_SQUARE}.get(square_number, WHITE_SQUARE)
+    if highlight:
+        return {0: WHITE_CIRCLE, 1: GREEN_CIRCLE, 2: RED_CIRCLE}.get(square_number, WHITE_CIRCLE)
+    else:
+        return {0: WHITE_SQUARE, 1: GREEN_SQUARE, 2: RED_SQUARE}.get(square_number, WHITE_SQUARE)
 
 
 def translate_direction(direction: Dict[str, int]) -> str:
@@ -81,7 +88,7 @@ def draw_table_with_highlight(table: List[List[int]], highlight_pos: tuple[int, 
         for col in range(TABLE_SIZE):
             if highlight_pos and (row, col) == highlight_pos:
                 # Highlight the current piece with a different color
-                print(f"\033[1m{draw_square(table[row][col])}\033[0m", end="")
+                print(draw_square(table[row][col], highlight=True), end="")
             else:
                 print(draw_square(table[row][col]), end="")
         print("")
